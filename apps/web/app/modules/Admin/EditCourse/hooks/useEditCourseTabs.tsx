@@ -12,6 +12,7 @@ export const useEditCourseTabs = () => {
     () => [
       { label: t("adminCourseView.common.settings"), value: "Settings" },
       { label: t("adminCourseView.common.curriculum"), value: "Curriculum" },
+      { label: t("adminCourseView.common.quizzes"), value: "Quizzes" },
       { label: t("adminCourseView.common.pricing"), value: "Pricing" },
       { label: t("adminCourseView.common.status"), value: "Status" },
     ],
