@@ -2661,6 +2661,33 @@
         }
       }
     },
+    "/api/course/{courseId}/quizzes/results": {
+      "get": {
+        "operationId": "CourseController_getCourseQuizResults",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCourseQuizResultsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/course/{courseId}/statistics/students-progress": {
       "get": {
         "operationId": "CourseController_getCourseStudentsProgress",
@@ -9663,6 +9690,70 @@
             "required": [
               "averageScoresPerQuiz"
             ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "GetCourseQuizResultsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "quizId": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "quizTitle": {
+                  "type": "string"
+                },
+                "chapterId": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "chapterTitle": {
+                  "type": "string"
+                },
+                "responsesCount": {
+                  "type": "number"
+                },
+                "scores": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "studentId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "studentName": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "studentId",
+                      "studentName",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "quizId",
+                "quizTitle",
+                "chapterId",
+                "chapterTitle",
+                "responsesCount",
+                "scores"
+              ]
+            }
           }
         },
         "required": [

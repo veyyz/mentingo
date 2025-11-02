@@ -56,6 +56,7 @@ import { UpdateCourseBody, updateCourseSchema } from "src/courses/schemas/update
 import {
   allCoursesValidation,
   coursesValidation,
+  courseQuizResultsValidation,
   studentCoursesValidation,
   studentsWithEnrolmentValidation,
 } from "src/courses/validations/validations";
@@ -72,6 +73,7 @@ import type {
   AllCoursesResponse,
   AllStudentCourseProgressionResponse,
   AllStudentCoursesResponse,
+  CourseQuizResultsResponse,
   CourseStatisticsResponse,
 } from "src/courses/schemas/course.schema";
 import type {
@@ -181,6 +183,17 @@ export class CourseController {
       groupId,
     };
     return await this.courseService.getStudentsWithEnrollmentDate(courseId, filters);
+  }
+
+  @Get(":courseId/quizzes/results")
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.CONTENT_CREATOR)
+  @Validate(courseQuizResultsValidation)
+  async getCourseQuizResults(
+    @Param("courseId") courseId: UUIDType,
+  ): Promise<BaseResponse<CourseQuizResultsResponse>> {
+    const data = await this.courseService.getCourseQuizResults(courseId);
+
+    return new BaseResponse(data);
   }
 
   @Get("available-courses")

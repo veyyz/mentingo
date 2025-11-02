@@ -64,6 +64,23 @@ export const courseAverageQuizScoresSchema = Type.Object({
   averageScoresPerQuiz: Type.Array(courseAverageQuizScorePerQuizSchema),
 });
 
+export const courseQuizResultStudentSchema = Type.Object({
+  studentId: UUIDSchema,
+  studentName: Type.String(),
+  score: Type.Number(),
+});
+
+export const courseQuizResultSchema = Type.Object({
+  quizId: UUIDSchema,
+  quizTitle: Type.String(),
+  chapterId: UUIDSchema,
+  chapterTitle: Type.String(),
+  responsesCount: Type.Number(),
+  scores: Type.Array(courseQuizResultStudentSchema),
+});
+
+export const courseQuizResultsSchema = Type.Array(courseQuizResultSchema);
+
 export const studentCourseProgressionSchema = Type.Object({
   studentId: UUIDSchema,
   studentName: Type.String(),
@@ -88,3 +105,6 @@ export type CourseStatusDistribution = Static<typeof courseStatusDistributionSch
 export type CourseAverageQuizScorePerQuiz = Static<typeof courseAverageQuizScorePerQuizSchema>;
 export type CourseAverageQuizScoresResponse = Static<typeof courseAverageQuizScoresSchema>;
 export type AllStudentCourseProgressionResponse = Static<typeof allStudentCourseProgressionSchema>;
+export type CourseQuizResultStudent = Static<typeof courseQuizResultStudentSchema>;
+export type CourseQuizResult = Static<typeof courseQuizResultSchema>;
+export type CourseQuizResultsResponse = Static<typeof courseQuizResultsSchema>;

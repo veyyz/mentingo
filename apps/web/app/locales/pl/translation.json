@@ -816,11 +816,30 @@
     "common": {
       "settings": "Ustawienia",
       "curriculum": "Program nauczania",
+      "quizzes": "Quizy",
       "status": "Status",
       "pricing": "Cennik",
       "preview": "Podgląd",
       "enrolledStudents": "Zapisani studenci",
       "testAiMentor": "Przetestuj AI Mentora"
+    },
+    "quizzes": {
+      "empty": "W tym kursie nie ma jeszcze żadnych quizów.",
+      "chapterLabel": "Rozdział: {{chapter}}",
+      "details": {
+        "responsesHeader": "Odpowiedzi na quiz",
+        "responsesCount_zero": "0 odpowiedzi",
+        "responsesCount_one": "{{count}} odpowiedź",
+        "responsesCount_few": "{{count}} odpowiedzi",
+        "responsesCount_many": "{{count}} odpowiedzi",
+        "responsesCount_other": "{{count}} odpowiedzi",
+        "table": {
+          "student": "Student",
+          "score": "Wynik"
+        },
+        "scoreValue": "{{score}}%",
+        "noResponses": "Brak przesłanych odpowiedzi."
+      }
     },
     "toast": {
       "createCourseSuccessfully": "Kurs utworzony pomyślnie",

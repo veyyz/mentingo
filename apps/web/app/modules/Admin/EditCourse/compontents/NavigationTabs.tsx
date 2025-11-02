@@ -31,6 +31,7 @@ const NavigationTabs = ({ setNavigationTabState }: NavigationTabsProps) => {
       <Tabs.List className="flex items-center gap-5 border-b border-gray-200">
         <TabTrigger value="Settings">{t("adminCourseView.common.settings")}</TabTrigger>
         <TabTrigger value="Curriculum">{t("adminCourseView.common.curriculum")}</TabTrigger>
+        <TabTrigger value="Quizzes">{t("adminCourseView.common.quizzes")}</TabTrigger>
         <TabTrigger value="Pricing">{t("adminCourseView.common.pricing")}</TabTrigger>
         <TabTrigger value="Status">{t("adminCourseView.common.status")}</TabTrigger>
       </Tabs.List>

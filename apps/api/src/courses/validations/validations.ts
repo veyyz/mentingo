@@ -1,7 +1,11 @@
 import { Type } from "@sinclair/typebox";
 
 import { baseResponse, paginatedResponse, UUIDSchema } from "src/common";
-import { allCoursesSchema, allStudentCoursesSchema } from "src/courses/schemas/course.schema";
+import {
+  allCoursesSchema,
+  allStudentCoursesSchema,
+  courseQuizResultsSchema,
+} from "src/courses/schemas/course.schema";
 import {
   coursesStatusOptions,
   sortCourseFieldsOptions,
@@ -115,4 +119,9 @@ export const studentsWithEnrolmentValidation = {
       schema: UUIDSchema,
     },
   ],
+};
+
+export const courseQuizResultsValidation = {
+  response: baseResponse(courseQuizResultsSchema),
+  request: [{ type: "param" as const, name: "courseId", schema: UUIDSchema }],
 };

@@ -1156,6 +1156,24 @@ export interface GetAverageQuizScoresResponse {
   };
 }
 
+export interface GetCourseQuizResultsResponse {
+  data: {
+    /** @format uuid */
+    quizId: string;
+    quizTitle: string;
+    /** @format uuid */
+    chapterId: string;
+    chapterTitle: string;
+    responsesCount: number;
+    scores: {
+      /** @format uuid */
+      studentId: string;
+      studentName: string;
+      score: number;
+    }[];
+  }[];
+}
+
 export interface GetCourseStudentsProgressResponse {
   data: {
     /** @format uuid */
@@ -4184,6 +4202,20 @@ export class API<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     courseControllerGetAverageQuizScores: (courseId: string, params: RequestParams = {}) =>
       this.request<GetAverageQuizScoresResponse, any>({
         path: `/api/course/${courseId}/statistics/average-quiz-score`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name CourseControllerGetCourseQuizResults
+     * @request GET:/api/course/{courseId}/quizzes/results
+     */
+    courseControllerGetCourseQuizResults: (courseId: string, params: RequestParams = {}) =>
+      this.request<GetCourseQuizResultsResponse, any>({
+        path: `/api/course/${courseId}/quizzes/results`,
         method: "GET",
         format: "json",
         ...params,

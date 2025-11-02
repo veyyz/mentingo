@@ -813,11 +813,28 @@
     "common": {
       "settings": "Settings",
       "curriculum": "Curriculum",
+      "quizzes": "Quizzes",
       "status": "Status",
       "pricing": "Pricing",
       "preview": "Preview",
       "enrolledStudents": "Enrolled students",
       "testAiMentor": "Test AI Mentor"
+    },
+    "quizzes": {
+      "empty": "No quizzes have been added to this course yet.",
+      "chapterLabel": "Chapter: {{chapter}}",
+      "details": {
+        "responsesHeader": "Quiz responses",
+        "responsesCount_zero": "0 responses",
+        "responsesCount_one": "{{count}} response",
+        "responsesCount_other": "{{count}} responses",
+        "table": {
+          "student": "Student",
+          "score": "Score"
+        },
+        "scoreValue": "{{score}}%",
+        "noResponses": "No responses submitted yet."
+      }
     },
     "toast": {
       "createCourseSuccessfully": "Course created successfully",

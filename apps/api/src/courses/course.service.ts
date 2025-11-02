@@ -68,6 +68,7 @@ import type {
   AllStudentCoursesResponse,
   CourseAverageQuizScorePerQuiz,
   CourseAverageQuizScoresResponse,
+  CourseQuizResultsResponse,
   CourseStatisticsResponse,
   CourseStatusDistribution,
 } from "./schemas/course.schema";
@@ -1554,6 +1555,75 @@ export class CourseService {
       .where(eq(courses.id, courseId));
 
     return averageScorePerQuiz;
+  }
+
+  async getCourseQuizResults(courseId: UUIDType): Promise<CourseQuizResultsResponse> {
+    const quizRows = await this.db
+      .select({
+        quizId: lessons.id,
+        quizTitle: lessons.title,
+        chapterId: chapters.id,
+        chapterTitle: chapters.title,
+        studentId: studentLessonProgress.studentId,
+        studentFirstName: users.firstName,
+        studentLastName: users.lastName,
+        studentEmail: users.email,
+        score: studentLessonProgress.quizScore,
+      })
+      .from(lessons)
+      .innerJoin(chapters, eq(lessons.chapterId, chapters.id))
+      .leftJoin(studentLessonProgress, eq(studentLessonProgress.lessonId, lessons.id))
+      .leftJoin(users, eq(users.id, studentLessonProgress.studentId))
+      .where(and(eq(chapters.courseId, courseId), eq(lessons.type, LESSON_TYPES.QUIZ)))
+      .orderBy(chapters.displayOrder, lessons.displayOrder, users.firstName, users.lastName);
+
+    const quizzesMap = new Map<
+      string,
+      {
+        quizId: string;
+        quizTitle: string;
+        chapterId: string;
+        chapterTitle: string;
+        scores: { studentId: string; studentName: string; score: number }[];
+      }
+    >();
+
+    quizRows.forEach((row) => {
+      let quiz = quizzesMap.get(row.quizId);
+
+      if (!quiz) {
+        quiz = {
+          quizId: row.quizId,
+          quizTitle: row.quizTitle,
+          chapterId: row.chapterId,
+          chapterTitle: row.chapterTitle,
+          scores: [],
+        };
+
+        quizzesMap.set(row.quizId, quiz);
+      }
+
+      if (row.studentId && typeof row.score === "number") {
+        const fullName = [row.studentFirstName, row.studentLastName]
+          .filter((value): value is string => Boolean(value && value.trim().length))
+          .join(" ");
+        const studentName = fullName.trim().length ? fullName : (row.studentEmail ?? "");
+
+        quiz.scores.push({
+          studentId: row.studentId,
+          studentName,
+          score: row.score,
+        });
+      }
+    });
+
+    return Array.from(quizzesMap.values()).map((quiz) => ({
+      ...quiz,
+      scores: quiz.scores.sort((a, b) =>
+        a.studentName.localeCompare(b.studentName, undefined, { sensitivity: "base" }),
+      ),
+      responsesCount: quiz.scores.length,
+    }));
   }
 
   async getStudentsProgress(query: CourseStudentProgressionQuery) {

@@ -17,6 +17,7 @@ import { getCourseBadgeVariant } from "../Courses/utils";
 
 import CourseLessons from "./CourseLessons/CourseLessons";
 import CoursePricing from "./CoursePricing/CoursePricing";
+import { CourseQuizzes } from "./CourseQuizzes";
 import CourseSettings from "./CourseSettings/CourseSettings";
 import CourseStatus from "./CourseStatus/CourseStatus";
 
@@ -136,6 +137,9 @@ const EditCourse = () => {
               canRefetchChapterList={!!canRefetchChapterList}
             />
           </LeaveModalProvider>
+        </TabsContent>
+        <TabsContent value="Quizzes">
+          <CourseQuizzes courseId={course?.id} />
         </TabsContent>
         <TabsContent value="Pricing">
           <CoursePricing
