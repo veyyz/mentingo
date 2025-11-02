@@ -1,7 +1,13 @@
 import type { Question } from "./CourseLessons/NewLesson/QuizLessonForm/QuizLessonForm.types";
 import type { AiMentorType } from "@repo/shared";
 
-export type NavigationTab = "Settings" | "Curriculum" | "Pricing" | "Status";
+export type NavigationTab =
+  | "Settings"
+  | "Curriculum"
+  | "Quizzes"
+  | "Pricing"
+  | "Status"
+  | "Enrolled";
 
 export const LessonResourceType = {
   EMBED: "embed",

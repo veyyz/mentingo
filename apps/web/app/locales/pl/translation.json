@@ -816,11 +816,39 @@
     "common": {
       "settings": "Ustawienia",
       "curriculum": "Program nauczania",
+      "quizzes": "Quizy",
       "status": "Status",
       "pricing": "Cennik",
       "preview": "Podgląd",
       "enrolledStudents": "Zapisani studenci",
       "testAiMentor": "Przetestuj AI Mentora"
+    },
+    "quizzes": {
+      "empty": "W tym kursie nie ma jeszcze żadnych quizów.",
+      "chapterLabel": "Rozdział: {{chapter}}",
+      "details": {
+        "overview": "Ustawienia quizu",
+        "questionCount_one": "{{count}} pytanie",
+        "questionCount_few": "{{count}} pytania",
+        "questionCount_many": "{{count}} pytań",
+        "questionCount_other": "{{count}} pytań",
+        "passingScoreLabel": "Próg zaliczenia",
+        "passingScore": "{{score}}%",
+        "noPassingScore": "Brak ustawionego progu zaliczenia",
+        "attemptsLimitLabel": "Limit podejść",
+        "attemptsLimit_one": "{{count}} podejście",
+        "attemptsLimit_few": "{{count}} podejścia",
+        "attemptsLimit_many": "{{count}} podejść",
+        "attemptsLimit_other": "{{count}} podejść",
+        "noAttemptsLimit": "Brak limitu podejść",
+        "cooldownLabel": "Blokada czasowa",
+        "cooldown": "{{hours}} h",
+        "noCooldown": "Brak blokady czasowej",
+        "descriptionHeader": "Opis",
+        "noDescription": "Brak opisu.",
+        "questionsHeader": "Pytania",
+        "noQuestions": "Brak pytań."
+      }
     },
     "toast": {
       "createCourseSuccessfully": "Kurs utworzony pomyślnie",

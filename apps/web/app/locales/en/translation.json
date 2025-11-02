@@ -813,11 +813,35 @@
     "common": {
       "settings": "Settings",
       "curriculum": "Curriculum",
+      "quizzes": "Quizzes",
       "status": "Status",
       "pricing": "Pricing",
       "preview": "Preview",
       "enrolledStudents": "Enrolled students",
       "testAiMentor": "Test AI Mentor"
+    },
+    "quizzes": {
+      "empty": "No quizzes have been added to this course yet.",
+      "chapterLabel": "Chapter: {{chapter}}",
+      "details": {
+        "overview": "Quiz settings",
+        "questionCount_one": "{{count}} question",
+        "questionCount_other": "{{count}} questions",
+        "passingScoreLabel": "Passing score",
+        "passingScore": "{{score}}%",
+        "noPassingScore": "No passing score set",
+        "attemptsLimitLabel": "Attempts limit",
+        "attemptsLimit_one": "{{count}} attempt",
+        "attemptsLimit_other": "{{count}} attempts",
+        "noAttemptsLimit": "No attempts limit",
+        "cooldownLabel": "Cooldown",
+        "cooldown": "{{hours}}h",
+        "noCooldown": "No cooldown",
+        "descriptionHeader": "Description",
+        "noDescription": "No description provided.",
+        "questionsHeader": "Questions",
+        "noQuestions": "No questions added yet."
+      }
     },
     "toast": {
       "createCourseSuccessfully": "Course created successfully",
