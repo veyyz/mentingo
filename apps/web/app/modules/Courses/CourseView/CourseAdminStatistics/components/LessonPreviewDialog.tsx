@@ -90,18 +90,46 @@ export default function LessonPreviewDialog({
     ((lesson.thresholdScore ?? 0) * (lesson.quizDetails?.questionCount ?? 0)) / 100,
   );
 
+  const evaluatedQuestions = useMemo(
+    () =>
+      allQuestions.map((question) => {
+        const manualEvaluation = manualEvaluations[question.id];
+        const isShortAnswer = shortAnswerQuestions.some((q) => q.id === question.id);
+
+        return {
+          questionId: question.id,
+          isCorrect:
+            manualEvaluation ??
+            question.passQuestion ??
+            (isShortAnswer ? false : false),
+        };
+      }),
+    [allQuestions, manualEvaluations, shortAnswerQuestions],
+  );
+
+  const adjustedCorrect = useMemo(
+    () => evaluatedQuestions.filter((question) => question.isCorrect).length,
+    [evaluatedQuestions],
+  );
+
+  const adjustedTotal = allQuestions.length;
+
+  const adjustedScore = adjustedTotal
+    ? Math.round((adjustedCorrect / adjustedTotal) * 100)
+    : 0;
+
   const handleEvaluationChange = (questionId: string, isCorrect: boolean) => {
     setManualEvaluations((prev) => {
       const nextEvaluations = { ...prev, [questionId]: isCorrect };
 
       const evaluations = allQuestions.map((question) => ({
         questionId: question.id,
-        isCorrect: nextEvaluations[question.id] ?? question.passQuestion ?? false,
+        isCorrect:
+          nextEvaluations[question.id] ?? question.passQuestion ??
+          (shortAnswerQuestions.some((q) => q.id === question.id) ? false : false),
       }));
 
-      manualGradeLessonQuiz.mutate(
-        { lessonId, studentId: userId, evaluations },
-      );
+      manualGradeLessonQuiz.mutate({ lessonId, studentId: userId, evaluations });
 
       return nextEvaluations;
     });
@@ -148,13 +176,13 @@ export default function LessonPreviewDialog({
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <CircularProgress size={40} strokeWidth={4} value={lesson.quizDetails?.score ?? 0} />
+              <CircularProgress size={40} strokeWidth={4} value={adjustedScore} />
               <div className="flex flex-col">
                 <span className="group relative">
                   {t("studentLessonView.other.score", {
-                    score: lesson.quizDetails?.score ?? 0,
-                    correct: lesson.quizDetails?.correctAnswerCount ?? 0,
-                    questionsNumber: lesson.quizDetails?.questionCount,
+                    score: adjustedScore,
+                    correct: adjustedCorrect,
+                    questionsNumber: adjustedTotal,
                   })}
                 </span>
                 <span>
