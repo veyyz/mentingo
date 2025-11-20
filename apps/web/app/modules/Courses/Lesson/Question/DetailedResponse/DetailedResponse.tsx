@@ -1,6 +1,9 @@
 import { useFormContext } from "react-hook-form";
 
+import { useTranslation } from "react-i18next";
+
 import { Textarea } from "~/components/ui/textarea";
+import { Button } from "~/components/ui/button";
 import { useUserRole } from "~/hooks/useUserRole";
 import { cn } from "~/lib/utils";
 import { QuestionCard } from "~/modules/Courses/Lesson/Question/QuestionCard";
@@ -16,7 +19,11 @@ export type DetailedResponseProps = {
 };
 export const DetailedResponse = ({ question, isCompleted = false, manualGrading }: DetailedResponseProps) => {
   const { isAdmin } = useUserRole();
+  const { t } = useTranslation();
   const { register } = useFormContext<QuizForm>();
+
+  const manualEvaluation = manualGrading?.evaluations?.[question.id];
+  const showManualGrading = Boolean(manualGrading);
 
   return (
     <QuestionCard
