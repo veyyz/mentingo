@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLesson } from "~/api/queries";
 import { useUserById } from "~/api/queries/admin/useUserById";
+import { useManualGradeLessonQuiz } from "~/api/mutations";
 import { Icon } from "~/components/Icon";
 import { Button } from "~/components/ui/button";
 import { CircularProgress } from "~/components/ui/circular-progress";
@@ -35,6 +36,35 @@ export default function LessonPreviewDialog({
   const { data: user, isLoading: isLoadingUser } = useUserById(userId);
   const { data: lesson, isLoading: isLoadingLesson } = useLesson(lessonId, language, userId);
 
+  const manualGradeLessonQuiz = useManualGradeLessonQuiz(lessonId, userId, course.id, language);
+
+  const shortAnswerQuestions = useMemo(() => {
+    const questions = lesson?.quizDetails?.questions ?? [];
+
+    return questions.filter(
+      (question) => question.type === "brief_response" || question.type === "detailed_response",
+    );
+  }, [lesson?.quizDetails?.questions]);
+
+  const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
+  const [manualGradeStats, setManualGradeStats] =
+    useState<{ correctAnswerCount: number; wrongAnswerCount: number; questionCount: number; score: number } | null>(
+      null,
+    );
+
+  useEffect(() => {
+    if (!shortAnswerQuestions.length) return;
+
+    const initialEvaluation: Record<string, boolean> = {};
+
+    shortAnswerQuestions.forEach((question) => {
+      initialEvaluation[question.id] = question.passQuestion ?? false;
+    });
+
+    setManualEvaluations(initialEvaluation);
+    setManualGradeStats(null);
+  }, [shortAnswerQuestions, lessonId]);
+
   useEffect(() => {
     if (!isLoadingUser && !isLoadingLesson && (!user || !lesson || !course)) {
       onClose?.();
@@ -52,6 +82,59 @@ export default function LessonPreviewDialog({
   const requiredCorrect = Math.ceil(
     ((lesson.thresholdScore ?? 0) * (lesson.quizDetails?.questionCount ?? 0)) / 100,
   );
+
+  const manualCorrectAnswers = useMemo(
+    () =>
+      shortAnswerQuestions.reduce(
+        (count, question) => count + (manualEvaluations[question.id] ? 1 : 0),
+        0,
+      ),
+    [manualEvaluations, shortAnswerQuestions],
+  );
+
+  const adjustedCorrectAnswers = useMemo(() => {
+    if (manualGradeStats) return manualGradeStats.correctAnswerCount;
+
+    const baseCorrect = lesson.quizDetails?.correctAnswerCount ?? 0;
+    const initialShortAnswerCorrect = shortAnswerQuestions.reduce(
+      (count, question) => count + (question.passQuestion ? 1 : 0),
+      0,
+    );
+
+    return baseCorrect - initialShortAnswerCorrect + manualCorrectAnswers;
+  }, [lesson.quizDetails?.correctAnswerCount, manualCorrectAnswers, manualGradeStats, shortAnswerQuestions]);
+
+  const adjustedScore = useMemo(() => {
+    if (manualGradeStats) return manualGradeStats.score;
+
+    const questionCount = lesson.quizDetails?.questionCount ?? 0;
+
+    if (!questionCount) return null;
+
+    return Math.round((adjustedCorrectAnswers / questionCount) * 100);
+  }, [adjustedCorrectAnswers, lesson.quizDetails?.questionCount, manualGradeStats]);
+
+  const handleEvaluationChange = (questionId: string, isCorrect: boolean) => {
+    setManualEvaluations((prev) => {
+      const nextEvaluations = { ...prev, [questionId]: isCorrect };
+
+      const evaluations = shortAnswerQuestions.map((question) => ({
+        questionId: question.id,
+        isCorrect: nextEvaluations[question.id] ?? false,
+      }));
+
+      manualGradeLessonQuiz.mutate(
+        { lessonId, studentId: userId, evaluations },
+        {
+          onSuccess: (data) => {
+            setManualGradeStats(data);
+          },
+        },
+      );
+
+      return nextEvaluations;
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -105,6 +188,87 @@ export default function LessonPreviewDialog({
               </div>
             </div>
           </div>
+          {shortAnswerQuestions.length > 0 && (
+            <div className="flex flex-col gap-4 px-10 pb-6">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                <div className="flex flex-col gap-1">
+                  <span className="body-base-md text-neutral-900">
+                    {t("courseAdminStatistics.lessonPreview.manualGradingTitle")}
+                  </span>
+                  <p className="body-sm text-neutral-600">
+                    {t("courseAdminStatistics.lessonPreview.manualGradingDescription")}
+                  </p>
+                </div>
+                <div className="flex flex-col items-start gap-1 text-left sm:items-end sm:text-right">
+                  <span className="body-base-md text-neutral-900">
+                    {t("courseAdminStatistics.lessonPreview.adjustedScore", {
+                      score: adjustedScore ?? "–",
+                      correct: adjustedCorrectAnswers,
+                      total: lesson.quizDetails?.questionCount ?? 0,
+                    })}
+                  </span>
+                  <span className="body-sm text-neutral-600">
+                    {t("courseAdminStatistics.lessonPreview.originalScore", {
+                      score: lesson.quizDetails?.score ?? 0,
+                      correct: lesson.quizDetails?.correctAnswerCount ?? 0,
+                      total: lesson.quizDetails?.questionCount ?? 0,
+                    })}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3">
+                {shortAnswerQuestions.map((question) => {
+                  const studentAnswer = question.options?.[0]?.studentAnswer ?? "";
+                  const isCorrect = manualEvaluations[question.id];
+                  const isShortAnswer = question.type === "brief_response";
+
+                  return (
+                    <div
+                      key={question.id}
+                      className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="body-base-md text-neutral-900">{question.title}</span>
+                          <span className="body-sm text-neutral-600">
+                            {isShortAnswer
+                              ? t("courseAdminStatistics.lessonPreview.shortAnswerLabel")
+                              : t("courseAdminStatistics.lessonPreview.freeTextLabel")}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            variant={isCorrect ? "default" : "outline"}
+                            disabled={manualGradeLessonQuiz.isPending}
+                            onClick={() => handleEvaluationChange(question.id, true)}
+                          >
+                            {t("courseAdminStatistics.lessonPreview.markCorrect")}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={!isCorrect ? "destructive" : "outline"}
+                            disabled={manualGradeLessonQuiz.isPending}
+                            onClick={() => handleEvaluationChange(question.id, false)}
+                          >
+                            {t("courseAdminStatistics.lessonPreview.markIncorrect")}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-neutral-50 p-3">
+                        <span className="body-sm text-neutral-700">
+                          {t("courseAdminStatistics.lessonPreview.studentResponse")}
+                        </span>
+                        <p className="body-base text-neutral-900 whitespace-pre-line">
+                          {studentAnswer || t("courseAdminStatistics.lessonPreview.noResponse")}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <LessonContent
             lesson={lesson}
             course={course}
