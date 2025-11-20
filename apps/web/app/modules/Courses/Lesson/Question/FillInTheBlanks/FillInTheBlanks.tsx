@@ -2,18 +2,20 @@ import { useTranslation } from "react-i18next";
 
 import Viewer from "~/components/RichText/Viever";
 import { Card } from "~/components/ui/card";
+import { ManualGradingActions } from "~/modules/Courses/Lesson/Question/ManualGradingActions";
 
 import { FillInTheTextBlanks } from "./FillInTheTextBlanks";
 import { TextBlank } from "./TextBlank";
 
-import type { QuizQuestion } from "../types";
+import type { ManualGradingControls, QuizQuestion } from "../types";
 
 type FillInTheBlanksProps = {
   question: QuizQuestion;
   isCompleted: boolean;
+  manualGrading?: ManualGradingControls;
 };
 
-export const FillInTheBlanks = ({ question, isCompleted }: FillInTheBlanksProps) => {
+export const FillInTheBlanks = ({ question, isCompleted, manualGrading }: FillInTheBlanksProps) => {
   const { t } = useTranslation();
 
   if (!question.description) return null;
@@ -43,6 +45,7 @@ export const FillInTheBlanks = ({ question, isCompleted }: FillInTheBlanksProps)
           <Viewer content={question.solutionExplanation} />
         </div>
       )}
+      <ManualGradingActions questionId={question.id} manualGrading={manualGrading} />
     </Card>
   );
 };

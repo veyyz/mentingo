@@ -118,6 +118,17 @@ export const lessonSchema = Type.Object({
   updatedAt: Type.Optional(Type.String()),
 });
 
+export const manualQuizGradeSchema = Type.Object({
+  lessonId: UUIDSchema,
+  studentId: UUIDSchema,
+  evaluations: Type.Array(
+    Type.Object({
+      questionId: UUIDSchema,
+      isCorrect: Type.Boolean(),
+    }),
+  ),
+});
+
 export const createAiMentorLessonSchema = Type.Intersect([
   Type.Omit(lessonSchema, ["id", "displayOrder", "type"]),
   Type.Object({
