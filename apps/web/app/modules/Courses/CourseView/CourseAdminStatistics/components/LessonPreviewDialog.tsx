@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLesson } from "~/api/queries";
@@ -38,16 +38,18 @@ export default function LessonPreviewDialog({
 
   const manualGradeLessonQuiz = useManualGradeLessonQuiz(lessonId, userId, course.id, language);
 
-  const allQuestions = useMemo(() => lesson?.quizDetails?.questions ?? [], [lesson]);
+  const allQuestions = lesson?.quizDetails?.questions ?? [];
 
   const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!allQuestions.length) return;
+    const questions = lesson?.quizDetails?.questions;
+
+    if (!questions?.length) return;
 
     const initialEvaluation: Record<string, boolean> = {};
 
-    allQuestions.forEach((question) => {
+    questions.forEach((question) => {
       const isTextQuestion =
         question.type === "brief_response" || question.type === "detailed_response";
 
@@ -56,11 +58,19 @@ export default function LessonPreviewDialog({
         return;
       }
 
-      initialEvaluation[question.id] = isTextQuestion ? false : false;
+      if (isTextQuestion) {
+        initialEvaluation[question.id] = false;
+      }
     });
 
     setManualEvaluations(initialEvaluation);
-  }, [allQuestions, lessonId]);
+  }, [
+    lessonId,
+    lesson?.quizDetails?.questions?.length,
+    lesson?.quizDetails?.questions
+      ?.map((question) => `${question.id}:${question.passQuestion ?? ""}`)
+      .join("|"),
+  ]);
 
   useEffect(() => {
     if (!isLoadingUser && !isLoadingLesson && (!user || !lesson || !course)) {
