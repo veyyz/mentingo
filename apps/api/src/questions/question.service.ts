@@ -94,8 +94,9 @@ export class QuestionService {
           );
         }
 
-        // TODO: implement this
-        return true;
+        // Brief and detailed responses require manual grading. Default to incorrect
+        // until an admin evaluates the answer explicitly.
+        return false;
       })
       .with(QUESTION_TYPE.SINGLE_CHOICE, QUESTION_TYPE.PHOTO_QUESTION_SINGLE_CHOICE, () => {
         if (studentAnswer.answers.length !== 1) {
