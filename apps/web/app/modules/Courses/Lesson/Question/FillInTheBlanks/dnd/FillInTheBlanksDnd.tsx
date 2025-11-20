@@ -16,6 +16,7 @@ import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import Viewer from "~/components/RichText/Viever";
+import { ManualGradingActions } from "~/modules/Courses/Lesson/Question/ManualGradingActions";
 
 import { DndBlank } from "./DndBlank";
 import { DraggableWord } from "./DraggableWord";
@@ -23,12 +24,13 @@ import { SentenceBuilder } from "./SentenceBuilder";
 import { WordBank } from "./WordBank";
 
 import type { DndWord } from "./types";
-import type { QuizQuestion, QuizQuestionOption } from "../../types";
+import type { ManualGradingControls, QuizQuestion, QuizQuestionOption } from "../../types";
 import type { QuizForm } from "~/modules/Courses/Lesson/types";
 
 type FillInTheBlanksDndProps = {
   question: QuizQuestion;
   isCompleted?: boolean;
+  manualGrading?: ManualGradingControls;
 };
 
 const getAnswers = (options: QuizQuestionOption[] | undefined) => {
@@ -55,7 +57,11 @@ const getAnswers = (options: QuizQuestionOption[] | undefined) => {
   }, []);
 };
 
-export const FillInTheBlanksDnd: FC<FillInTheBlanksDndProps> = ({ question, isCompleted }) => {
+export const FillInTheBlanksDnd: FC<FillInTheBlanksDndProps> = ({
+  question,
+  isCompleted,
+  manualGrading,
+}) => {
   const { t } = useTranslation();
   const [words, setWords] = useState<DndWord[]>(getAnswers(question.options));
   const [currentlyDraggedWord, setCurrentlyDraggedWord] = useState<DndWord | null>(null);
@@ -298,6 +304,7 @@ export const FillInTheBlanksDnd: FC<FillInTheBlanksDndProps> = ({ question, isCo
           </div>
         )}
       </DndContext>
+      <ManualGradingActions questionId={question.id} manualGrading={manualGrading} />
     </div>
   );
 };

@@ -30,6 +30,7 @@ import {
   AverageScorePerQuizChart,
   CourseStudentsProgressTable,
   CourseStudentsQuizResultsTable,
+  CourseQuizzesAccordion,
 } from "./components";
 import { CourseStudentsAiMentorResultsTable } from "./components/CourseStudentsAiMentorResults";
 
@@ -40,6 +41,7 @@ import type { CourseStudentsQuizResultsQueryParams } from "~/api/queries/admin/u
 
 const StatisticsTabs = {
   progress: "progress",
+  quizzes: "quizzes",
   quizResults: "quizResults",
   aiMentorResults: "aiMentorResults",
 } as const;
@@ -193,6 +195,7 @@ export function CourseAdminStatistics({ course }: CourseAdminStatisticsProps) {
                       />
                     </div>
                   ))
+                  .with("quizzes", () => null)
                   .with("quizResults", () => (
                     <Select
                       value={(quizSearchParams.quizId as string) || "all"}
@@ -254,6 +257,9 @@ export function CourseAdminStatistics({ course }: CourseAdminStatisticsProps) {
                 searchParams={progressSearchParams}
                 onFilterChange={handleProgressFilterChange}
               />
+            </TabsContent>
+            <TabsContent value="quizzes">
+              <CourseQuizzesAccordion course={course} averageQuizScores={averageQuizScores} />
             </TabsContent>
             <TabsContent value="quizResults">
               <CourseStudentsQuizResultsTable

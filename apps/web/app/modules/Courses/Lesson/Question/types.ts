@@ -5,3 +5,9 @@ export type QuizQuestion = NonNullable<
 >["questions"][number];
 
 export type QuizQuestionOption = NonNullable<QuizQuestion["options"]>[number];
+
+export type ManualGradingControls = {
+  evaluations: Record<string, boolean>;
+  onChange: (questionId: string, isCorrect: boolean) => void;
+  isPending?: boolean;
+};
