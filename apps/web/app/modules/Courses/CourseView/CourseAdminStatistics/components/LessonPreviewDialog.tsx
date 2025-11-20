@@ -42,27 +42,28 @@ export default function LessonPreviewDialog({
 
   const isShortAnswer = (type: string) => type === "brief_response" || type === "detailed_response";
 
-  const computeInitialEvaluations = () => {
-    if (!allQuestions.length) return {} as Record<string, boolean>;
+  const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
 
-    return allQuestions.reduce<Record<string, boolean>>((acc, question) => {
-      if (question.passQuestion !== undefined && question.passQuestion !== null) {
-        acc[question.id] = question.passQuestion;
+  useEffect(() => {
+    if (!allQuestions.length) {
+      setManualEvaluations({});
+      return;
+    }
+
+    const defaults = allQuestions.reduce<Record<string, boolean>>((acc, question) => {
+      if (isShortAnswer(question.type)) {
+        acc[question.id] = false;
         return acc;
       }
 
-      if (isShortAnswer(question.type)) {
-        acc[question.id] = false;
+      if (question.passQuestion !== undefined && question.passQuestion !== null) {
+        acc[question.id] = question.passQuestion;
       }
 
       return acc;
     }, {});
-  };
 
-  const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    setManualEvaluations(computeInitialEvaluations());
+    setManualEvaluations(defaults);
   }, [allQuestions]);
 
   useEffect(() => {
@@ -86,9 +87,13 @@ export default function LessonPreviewDialog({
   const evaluatedQuestions = allQuestions.map((question) => {
     const manualEvaluation = manualEvaluations[question.id];
 
+    const defaultCorrect = isShortAnswer(question.type)
+      ? false
+      : question.passQuestion ?? false;
+
     return {
       questionId: question.id,
-      isCorrect: manualEvaluation ?? question.passQuestion ?? (isShortAnswer(question.type) ? false : false),
+      isCorrect: manualEvaluation ?? defaultCorrect,
     };
   });
 
@@ -106,8 +111,7 @@ export default function LessonPreviewDialog({
         questionId: question.id,
         isCorrect:
           nextEvaluations[question.id] ??
-          question.passQuestion ??
-          (isShortAnswer(question.type) ? false : false),
+          (isShortAnswer(question.type) ? false : question.passQuestion ?? false),
       }));
 
       manualGradeLessonQuiz.mutate({ lessonId, studentId: userId, evaluations });
