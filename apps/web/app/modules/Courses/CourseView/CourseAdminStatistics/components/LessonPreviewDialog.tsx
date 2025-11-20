@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLesson } from "~/api/queries";
@@ -13,6 +13,28 @@ import { LessonContent } from "~/modules/Courses/Lesson/LessonContent";
 import { useLanguageStore } from "~/modules/Dashboard/Settings/Language/LanguageStore";
 
 import type { GetCourseResponse } from "~/api/generated-api";
+
+const SHORT_ANSWER_TYPES = ["brief_response", "detailed_response"] as const;
+
+const isShortAnswer = (type: string) => SHORT_ANSWER_TYPES.includes(type as (typeof SHORT_ANSWER_TYPES)[number]);
+
+const buildDefaultEvaluations = (
+  questions: NonNullable<GetCourseResponse["data"]["chapters"]>[number]["lessons"][number]["quizDetails"]
+    ["questions"],
+) => {
+  return questions?.reduce<Record<string, boolean>>((acc, question) => {
+    if (isShortAnswer(question.type)) {
+      acc[question.id] = false;
+      return acc;
+    }
+
+    if (question.passQuestion !== undefined && question.passQuestion !== null) {
+      acc[question.id] = question.passQuestion;
+    }
+
+    return acc;
+  }, {}) ?? {};
+};
 
 interface LessonPreviewDialogProps {
   course: GetCourseResponse["data"];
@@ -40,31 +62,13 @@ export default function LessonPreviewDialog({
 
   const allQuestions = lesson?.quizDetails?.questions ?? [];
 
-  const isShortAnswer = (type: string) => type === "brief_response" || type === "detailed_response";
+  const defaultManualEvaluations = useMemo(() => buildDefaultEvaluations(allQuestions), [allQuestions]);
 
   const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!allQuestions.length) {
-      setManualEvaluations({});
-      return;
-    }
-
-    const defaults = allQuestions.reduce<Record<string, boolean>>((acc, question) => {
-      if (isShortAnswer(question.type)) {
-        acc[question.id] = false;
-        return acc;
-      }
-
-      if (question.passQuestion !== undefined && question.passQuestion !== null) {
-        acc[question.id] = question.passQuestion;
-      }
-
-      return acc;
-    }, {});
-
-    setManualEvaluations(defaults);
-  }, [allQuestions]);
+    setManualEvaluations(defaultManualEvaluations);
+  }, [defaultManualEvaluations]);
 
   useEffect(() => {
     if (!isLoadingUser && !isLoadingLesson && (!user || !lesson || !course)) {
@@ -86,10 +90,7 @@ export default function LessonPreviewDialog({
 
   const evaluatedQuestions = allQuestions.map((question) => {
     const manualEvaluation = manualEvaluations[question.id];
-
-    const defaultCorrect = isShortAnswer(question.type)
-      ? false
-      : question.passQuestion ?? false;
+    const defaultCorrect = defaultManualEvaluations[question.id] ?? false;
 
     return {
       questionId: question.id,
@@ -109,9 +110,7 @@ export default function LessonPreviewDialog({
 
       const evaluations = allQuestions.map((question) => ({
         questionId: question.id,
-        isCorrect:
-          nextEvaluations[question.id] ??
-          (isShortAnswer(question.type) ? false : question.passQuestion ?? false),
+        isCorrect: nextEvaluations[question.id] ?? defaultManualEvaluations[question.id] ?? false,
       }));
 
       manualGradeLessonQuiz.mutate({ lessonId, studentId: userId, evaluations });
