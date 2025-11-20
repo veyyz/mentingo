@@ -283,10 +283,9 @@ export class LessonService {
     }
 
     const lessonQuestions = await this.questionRepository.getQuizQuestionsToEvaluation(lessonId);
+    const manuallyGradableTypes = [QUESTION_TYPE.BRIEF_RESPONSE, QUESTION_TYPE.DETAILED_RESPONSE] as const;
     const evaluableQuestionIds = lessonQuestions
-      .filter((question) =>
-        [QUESTION_TYPE.BRIEF_RESPONSE, QUESTION_TYPE.DETAILED_RESPONSE].includes(question.type),
-      )
+      .filter((question) => manuallyGradableTypes.includes(question.type as typeof manuallyGradableTypes[number]))
       .map((question) => question.id);
 
     const invalidQuestionIds = evaluations
