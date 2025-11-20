@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLesson } from "~/api/queries";
 import { useUserById } from "~/api/queries/admin/useUserById";
+import { useManualGradeLessonQuiz } from "~/api/mutations";
 import { Icon } from "~/components/Icon";
 import { Button } from "~/components/ui/button";
 import { CircularProgress } from "~/components/ui/circular-progress";
@@ -35,6 +36,30 @@ export default function LessonPreviewDialog({
   const { data: user, isLoading: isLoadingUser } = useUserById(userId);
   const { data: lesson, isLoading: isLoadingLesson } = useLesson(lessonId, language, userId);
 
+  const manualGradeLessonQuiz = useManualGradeLessonQuiz(lessonId, userId, course.id, language);
+
+  const shortAnswerQuestions = useMemo(() => {
+    const questions = lesson?.quizDetails?.questions ?? [];
+
+    return questions.filter(
+      (question) => question.type === "brief_response" || question.type === "detailed_response",
+    );
+  }, [lesson?.quizDetails?.questions]);
+
+  const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!shortAnswerQuestions.length) return;
+
+    const initialEvaluation: Record<string, boolean> = {};
+
+    shortAnswerQuestions.forEach((question) => {
+      initialEvaluation[question.id] = question.passQuestion ?? false;
+    });
+
+    setManualEvaluations(initialEvaluation);
+  }, [shortAnswerQuestions, lessonId]);
+
   useEffect(() => {
     if (!isLoadingUser && !isLoadingLesson && (!user || !lesson || !course)) {
       onClose?.();
@@ -52,6 +77,31 @@ export default function LessonPreviewDialog({
   const requiredCorrect = Math.ceil(
     ((lesson.thresholdScore ?? 0) * (lesson.quizDetails?.questionCount ?? 0)) / 100,
   );
+
+  const handleEvaluationChange = (questionId: string, isCorrect: boolean) => {
+    setManualEvaluations((prev) => {
+      const nextEvaluations = { ...prev, [questionId]: isCorrect };
+
+      const evaluations = shortAnswerQuestions.map((question) => ({
+        questionId: question.id,
+        isCorrect: nextEvaluations[question.id] ?? false,
+      }));
+
+      manualGradeLessonQuiz.mutate(
+        { lessonId, studentId: userId, evaluations },
+      );
+
+      return nextEvaluations;
+    });
+  };
+
+  const manualGrading = shortAnswerQuestions.length
+    ? {
+        evaluations: manualEvaluations,
+        onChange: handleEvaluationChange,
+        isPending: manualGradeLessonQuiz.isPending,
+      }
+    : undefined;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -115,6 +165,7 @@ export default function LessonPreviewDialog({
             isFirstLesson={true}
             lessonLoading={isLoadingLesson}
             isPreviewMode={true}
+            manualGrading={manualGrading}
           />
         </div>
       </DialogContent>

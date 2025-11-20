@@ -8,16 +8,17 @@ import { PhotoQuestionSingleChoice } from "./PhotoQuestionSingleChoice";
 import { SingleChoice } from "./SingleChoice/SingleChoice";
 import { TrueOrFalse } from "./TrueOrFalse";
 
-import type { QuizQuestion } from "./types";
+import type { ManualGradingControls, QuizQuestion } from "./types";
 
 type QuestionProps = {
   question: QuizQuestion;
   isSubmitted?: boolean;
   isCompleted: boolean;
   lessonId: string;
+  manualGrading?: ManualGradingControls;
 };
 
-export const Question = ({ question, isCompleted, lessonId }: QuestionProps) => {
+export const Question = ({ question, isCompleted, lessonId, manualGrading }: QuestionProps) => {
   if (!lessonId) throw new Error("Lesson ID not found");
 
   const isTrueOrFalse = question.type === "true_or_false";
@@ -32,10 +33,22 @@ export const Question = ({ question, isCompleted, lessonId }: QuestionProps) => 
 
   switch (true) {
     case isBriefResponse:
-      return <BriefResponse question={question} isCompleted={isCompleted} />;
+      return (
+        <BriefResponse
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isDetailedResponse:
-      return <DetailedResponse question={question} isCompleted={isCompleted} />;
+      return (
+        <DetailedResponse
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isTextFillInTheBlanks:
       return <FillInTheBlanks question={question} isCompleted={isCompleted} />;
