@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLesson } from "~/api/queries";
@@ -40,37 +40,31 @@ export default function LessonPreviewDialog({
 
   const allQuestions = lesson?.quizDetails?.questions ?? [];
 
-  const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
+  const initialEvaluations = useMemo(() => {
+    if (!allQuestions.length) return {} as Record<string, boolean>;
 
-  useEffect(() => {
-    const questions = lesson?.quizDetails?.questions;
-
-    if (!questions?.length) return;
-
-    const initialEvaluation: Record<string, boolean> = {};
-
-    questions.forEach((question) => {
+    return allQuestions.reduce<Record<string, boolean>>((acc, question) => {
       const isTextQuestion =
         question.type === "brief_response" || question.type === "detailed_response";
 
       if (question.passQuestion !== undefined && question.passQuestion !== null) {
-        initialEvaluation[question.id] = question.passQuestion;
-        return;
+        acc[question.id] = question.passQuestion;
+        return acc;
       }
 
       if (isTextQuestion) {
-        initialEvaluation[question.id] = false;
+        acc[question.id] = false;
       }
-    });
 
-    setManualEvaluations(initialEvaluation);
-  }, [
-    lessonId,
-    lesson?.quizDetails?.questions?.length,
-    lesson?.quizDetails?.questions
-      ?.map((question) => `${question.id}:${question.passQuestion ?? ""}`)
-      .join("|"),
-  ]);
+      return acc;
+    }, {});
+  }, [allQuestions]);
+
+  const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setManualEvaluations(initialEvaluations);
+  }, [initialEvaluations]);
 
   useEffect(() => {
     if (!isLoadingUser && !isLoadingLesson && (!user || !lesson || !course)) {
