@@ -47,10 +47,6 @@ export default function LessonPreviewDialog({
   }, [lesson?.quizDetails?.questions]);
 
   const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
-  const [manualGradeStats, setManualGradeStats] =
-    useState<{ correctAnswerCount: number; wrongAnswerCount: number; questionCount: number; score: number } | null>(
-      null,
-    );
 
   useEffect(() => {
     if (!shortAnswerQuestions.length) return;
@@ -62,7 +58,6 @@ export default function LessonPreviewDialog({
     });
 
     setManualEvaluations(initialEvaluation);
-    setManualGradeStats(null);
   }, [shortAnswerQuestions, lessonId]);
 
   useEffect(() => {
@@ -83,33 +78,6 @@ export default function LessonPreviewDialog({
     ((lesson.thresholdScore ?? 0) * (lesson.quizDetails?.questionCount ?? 0)) / 100,
   );
 
-  const manualCorrectAnswers = shortAnswerQuestions.reduce(
-    (count, question) => count + (manualEvaluations[question.id] ? 1 : 0),
-    0,
-  );
-
-  const adjustedCorrectAnswers = manualGradeStats
-    ? manualGradeStats.correctAnswerCount
-    : (() => {
-        const baseCorrect = lesson.quizDetails?.correctAnswerCount ?? 0;
-        const initialShortAnswerCorrect = shortAnswerQuestions.reduce(
-          (count, question) => count + (question.passQuestion ? 1 : 0),
-          0,
-        );
-
-        return baseCorrect - initialShortAnswerCorrect + manualCorrectAnswers;
-      })();
-
-  const adjustedScore = manualGradeStats
-    ? manualGradeStats.score
-    : (() => {
-        const questionCount = lesson.quizDetails?.questionCount ?? 0;
-
-        if (!questionCount) return null;
-
-        return Math.round((adjustedCorrectAnswers / questionCount) * 100);
-      })();
-
   const handleEvaluationChange = (questionId: string, isCorrect: boolean) => {
     setManualEvaluations((prev) => {
       const nextEvaluations = { ...prev, [questionId]: isCorrect };
@@ -121,16 +89,19 @@ export default function LessonPreviewDialog({
 
       manualGradeLessonQuiz.mutate(
         { lessonId, studentId: userId, evaluations },
-        {
-          onSuccess: (data) => {
-            setManualGradeStats(data);
-          },
-        },
       );
 
       return nextEvaluations;
     });
   };
+
+  const manualGrading = shortAnswerQuestions.length
+    ? {
+        evaluations: manualEvaluations,
+        onChange: handleEvaluationChange,
+        isPending: manualGradeLessonQuiz.isPending,
+      }
+    : undefined;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -275,6 +246,7 @@ export default function LessonPreviewDialog({
             isFirstLesson={true}
             lessonLoading={isLoadingLesson}
             isPreviewMode={true}
+            manualGrading={manualGrading}
           />
         </div>
       </DialogContent>
