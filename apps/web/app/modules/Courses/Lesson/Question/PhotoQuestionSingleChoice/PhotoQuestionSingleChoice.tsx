@@ -1,18 +1,21 @@
 import { useUserRole } from "~/hooks/useUserRole";
 
 import { QuestionCard } from "../QuestionCard";
+import { ManualGradingActions } from "../ManualGradingActions";
 import { SingleChoiceOptionList } from "../SingleChoice/SingleChoiceOptionList";
 
-import type { QuizQuestion } from "../types";
+import type { ManualGradingControls, QuizQuestion } from "../types";
 
 type PhotoQuestionSingleChoiceProps = {
   question: QuizQuestion;
   isCompleted?: boolean;
+  manualGrading?: ManualGradingControls;
 };
 
 export const PhotoQuestionSingleChoice = ({
   question,
   isCompleted = false,
+  manualGrading,
 }: PhotoQuestionSingleChoiceProps) => {
   const { isAdmin } = useUserRole();
 
@@ -35,6 +38,7 @@ export const PhotoQuestionSingleChoice = ({
         isCompleted={isCompleted}
         withPicture
       />
+      <ManualGradingActions questionId={question.id} manualGrading={manualGrading} />
     </QuestionCard>
   );
 };

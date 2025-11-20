@@ -136,11 +136,15 @@ export class CertificatesService {
       );
 
       if (!certificate) {
-        throw new NotFoundException("Certificate not found");
+        return null;
       }
 
       return certificate;
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        return null;
+      }
+
       console.error("Error fetching certificate:", error);
       throw error;
     }
