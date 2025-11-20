@@ -18,10 +18,11 @@ const SHORT_ANSWER_TYPES = ["brief_response", "detailed_response"] as const;
 
 const isShortAnswer = (type: string) => SHORT_ANSWER_TYPES.includes(type as (typeof SHORT_ANSWER_TYPES)[number]);
 
-const buildDefaultEvaluations = (
-  questions: NonNullable<GetCourseResponse["data"]["chapters"]>[number]["lessons"][number]["quizDetails"]
-    ["questions"],
-) => {
+type LessonQuizQuestion = NonNullable<
+  NonNullable<GetCourseResponse["data"]["chapters"]>[number]["lessons"][number]["quizDetails"]
+>["questions"][number];
+
+const buildDefaultEvaluations = (questions: LessonQuizQuestion[] | undefined) => {
   return questions?.reduce<Record<string, boolean>>((acc, question) => {
     if (isShortAnswer(question.type)) {
       acc[question.id] = false;
