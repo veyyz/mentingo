@@ -8,16 +8,17 @@ import { PhotoQuestionSingleChoice } from "./PhotoQuestionSingleChoice";
 import { SingleChoice } from "./SingleChoice/SingleChoice";
 import { TrueOrFalse } from "./TrueOrFalse";
 
-import type { QuizQuestion } from "./types";
+import type { ManualGradingControls, QuizQuestion } from "./types";
 
 type QuestionProps = {
   question: QuizQuestion;
   isSubmitted?: boolean;
   isCompleted: boolean;
   lessonId: string;
+  manualGrading?: ManualGradingControls;
 };
 
-export const Question = ({ question, isCompleted, lessonId }: QuestionProps) => {
+export const Question = ({ question, isCompleted, lessonId, manualGrading }: QuestionProps) => {
   if (!lessonId) throw new Error("Lesson ID not found");
 
   const isTrueOrFalse = question.type === "true_or_false";
@@ -32,31 +33,85 @@ export const Question = ({ question, isCompleted, lessonId }: QuestionProps) => 
 
   switch (true) {
     case isBriefResponse:
-      return <BriefResponse question={question} isCompleted={isCompleted} />;
+      return (
+        <BriefResponse
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isDetailedResponse:
-      return <DetailedResponse question={question} isCompleted={isCompleted} />;
+      return (
+        <DetailedResponse
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isTextFillInTheBlanks:
-      return <FillInTheBlanks question={question} isCompleted={isCompleted} />;
+      return (
+        <FillInTheBlanks
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isDraggableFillInTheBlanks:
-      return <FillInTheBlanksDnd question={question} isCompleted={isCompleted} />;
+      return (
+        <FillInTheBlanksDnd
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isSingleQuestion:
-      return <SingleChoice question={question} isCompleted={isCompleted} />;
+      return (
+        <SingleChoice
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isMultiQuestion:
-      return <MultipleChoice question={question} isCompleted={isCompleted} />;
+      return (
+        <MultipleChoice
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isPhotoQuestionSingleChoice:
-      return <PhotoQuestionSingleChoice question={question} isCompleted={isCompleted} />;
+      return (
+        <PhotoQuestionSingleChoice
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isPhotoQuestionMultipleChoice:
-      return <PhotoQuestionMultipleChoice question={question} isCompleted={isCompleted} />;
+      return (
+        <PhotoQuestionMultipleChoice
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isTrueOrFalse:
-      return <TrueOrFalse question={question} isCompleted={isCompleted} />;
+      return (
+        <TrueOrFalse
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     default:
       return null;

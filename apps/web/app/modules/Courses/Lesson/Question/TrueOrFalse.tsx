@@ -5,16 +5,18 @@ import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
 
 import { QuestionCard } from "./QuestionCard";
+import { ManualGradingActions } from "./ManualGradingActions";
 
-import type { QuizQuestion } from "./types";
+import type { ManualGradingControls, QuizQuestion } from "./types";
 import type { QuizForm } from "~/modules/Courses/Lesson/types";
 
 type TrueOrFalseProps = {
   question: QuizQuestion;
   isCompleted?: boolean;
+  manualGrading?: ManualGradingControls;
 };
 
-export const TrueOrFalse = ({ question, isCompleted }: TrueOrFalseProps) => {
+export const TrueOrFalse = ({ question, isCompleted, manualGrading }: TrueOrFalseProps) => {
   const { register } = useFormContext<QuizForm>();
   const { t } = useTranslation();
   return (
@@ -69,6 +71,7 @@ export const TrueOrFalse = ({ question, isCompleted }: TrueOrFalseProps) => {
           </div>
         ),
       )}
+      <ManualGradingActions questionId={question.id} manualGrading={manualGrading} />
     </QuestionCard>
   );
 };

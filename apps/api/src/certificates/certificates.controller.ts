@@ -54,6 +54,11 @@ export class CertificatesController {
     @Query("courseId") courseId: UUIDType,
   ): Promise<AllCertificatesResponse> {
     const certificate = await this.certificatesService.getCertificate(userId, courseId);
+
+    if (!certificate) {
+      return [];
+    }
+
     return [certificate];
   }
 
