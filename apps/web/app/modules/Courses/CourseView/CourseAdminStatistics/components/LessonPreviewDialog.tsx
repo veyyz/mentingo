@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLesson } from "~/api/queries";
 import { useUserById } from "~/api/queries/admin/useUserById";
+import { useManualGradeLessonQuiz } from "~/api/mutations";
 import { Icon } from "~/components/Icon";
 import { Button } from "~/components/ui/button";
 import { CircularProgress } from "~/components/ui/circular-progress";
@@ -35,6 +36,42 @@ export default function LessonPreviewDialog({
   const { data: user, isLoading: isLoadingUser } = useUserById(userId);
   const { data: lesson, isLoading: isLoadingLesson } = useLesson(lessonId, language, userId);
 
+  const manualGradeLessonQuiz = useManualGradeLessonQuiz(lessonId, userId, course.id, language);
+
+  const allQuestions = lesson?.quizDetails?.questions ?? [];
+
+  const shortAnswerQuestions = useMemo(
+    () =>
+      allQuestions.filter(
+        (question) =>
+          question.type === "brief_response" || question.type === "detailed_response",
+      ),
+    [allQuestions],
+  );
+
+  const initialEvaluations = useMemo(() => {
+    if (!allQuestions.length) return {} as Record<string, boolean>;
+
+    return allQuestions.reduce<Record<string, boolean>>((acc, question) => {
+      if (question.passQuestion !== undefined && question.passQuestion !== null) {
+        acc[question.id] = question.passQuestion;
+        return acc;
+      }
+
+      if (shortAnswerQuestions.some((q) => q.id === question.id)) {
+        acc[question.id] = false;
+      }
+
+      return acc;
+    }, {});
+  }, [allQuestions, shortAnswerQuestions]);
+
+  const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setManualEvaluations(initialEvaluations);
+  }, [initialEvaluations]);
+
   useEffect(() => {
     if (!isLoadingUser && !isLoadingLesson && (!user || !lesson || !course)) {
       onClose?.();
@@ -52,6 +89,59 @@ export default function LessonPreviewDialog({
   const requiredCorrect = Math.ceil(
     ((lesson.thresholdScore ?? 0) * (lesson.quizDetails?.questionCount ?? 0)) / 100,
   );
+
+  const evaluatedQuestions = useMemo(
+    () =>
+      allQuestions.map((question) => {
+        const manualEvaluation = manualEvaluations[question.id];
+        const isShortAnswer = shortAnswerQuestions.some((q) => q.id === question.id);
+
+        return {
+          questionId: question.id,
+          isCorrect:
+            manualEvaluation ??
+            question.passQuestion ??
+            (isShortAnswer ? false : false),
+        };
+      }),
+    [allQuestions, manualEvaluations, shortAnswerQuestions],
+  );
+
+  const adjustedCorrect = useMemo(
+    () => evaluatedQuestions.filter((question) => question.isCorrect).length,
+    [evaluatedQuestions],
+  );
+
+  const adjustedTotal = allQuestions.length;
+
+  const adjustedScore = adjustedTotal
+    ? Math.round((adjustedCorrect / adjustedTotal) * 100)
+    : 0;
+
+  const handleEvaluationChange = (questionId: string, isCorrect: boolean) => {
+    setManualEvaluations((prev) => {
+      const nextEvaluations = { ...prev, [questionId]: isCorrect };
+
+      const evaluations = allQuestions.map((question) => ({
+        questionId: question.id,
+        isCorrect:
+          nextEvaluations[question.id] ?? question.passQuestion ??
+          (shortAnswerQuestions.some((q) => q.id === question.id) ? false : false),
+      }));
+
+      manualGradeLessonQuiz.mutate({ lessonId, studentId: userId, evaluations });
+
+      return nextEvaluations;
+    });
+  };
+
+  const manualGrading = allQuestions.length
+    ? {
+        evaluations: manualEvaluations,
+        onChange: handleEvaluationChange,
+        isPending: manualGradeLessonQuiz.isPending,
+      }
+    : undefined;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -86,13 +176,13 @@ export default function LessonPreviewDialog({
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <CircularProgress size={40} strokeWidth={4} value={lesson.quizDetails?.score ?? 0} />
+              <CircularProgress size={40} strokeWidth={4} value={adjustedScore} />
               <div className="flex flex-col">
                 <span className="group relative">
                   {t("studentLessonView.other.score", {
-                    score: lesson.quizDetails?.score ?? 0,
-                    correct: lesson.quizDetails?.correctAnswerCount ?? 0,
-                    questionsNumber: lesson.quizDetails?.questionCount,
+                    score: adjustedScore,
+                    correct: adjustedCorrect,
+                    questionsNumber: adjustedTotal,
                   })}
                 </span>
                 <span>
@@ -115,6 +205,7 @@ export default function LessonPreviewDialog({
             isFirstLesson={true}
             lessonLoading={isLoadingLesson}
             isPreviewMode={true}
+            manualGrading={manualGrading}
           />
         </div>
       </DialogContent>

@@ -17,6 +17,8 @@ import { cn } from "~/lib/utils";
 import { LessonType } from "~/modules/Admin/EditCourse/EditCourse.types";
 import { Quiz } from "~/modules/Courses/Lesson/Quiz";
 
+import type { ManualGradingControls } from "~/modules/Courses/Lesson/Question/types";
+
 import Presentation from "../../../components/Presentation/Presentation";
 
 import AiMentorLesson from "./AiMentorLesson/AiMentorLesson";
@@ -35,6 +37,7 @@ type LessonContentProps = {
   isLastLesson: boolean;
   lessonLoading: boolean;
   isPreviewMode?: boolean;
+  manualGrading?: ManualGradingControls;
 };
 
 export const LessonContent = ({
@@ -47,6 +50,7 @@ export const LessonContent = ({
   lessonLoading,
   isLastLesson,
   isPreviewMode = false,
+  manualGrading,
 }: LessonContentProps) => {
   const [isPreviousDisabled, setIsPreviousDisabled] = useState(false);
   const { data: user } = useCurrentUser();
@@ -116,6 +120,7 @@ export const LessonContent = ({
           userId={user?.id || ""}
           isPreviewMode={isPreviewMode}
           previewLessonId={lesson.id}
+          manualGrading={manualGrading}
         />
       ))
       .with("video", () => (

@@ -1203,6 +1203,7 @@
       "allLessons": "All lessons",
       "tabs": {
         "progress": "Progress",
+        "quizzes": "Quizzes",
         "quizResults": "Quiz Results",
         "aiMentorResults": "AI Mentor Results"
       },
@@ -1236,7 +1237,8 @@
       },
       "empty": {
         "noUsers": "No users",
-        "enrolled": "enrolled"
+        "enrolled": "enrolled",
+        "noQuizzes": "No quizzes available"
       }
     }
   },
@@ -1433,6 +1435,20 @@
       "trueOrFalseRequired": "A true or false response is required.",
       "photoQuestionMustHaveAnswer": "An answer is required for this photo question.",
       "unansweredQuestions": "It seems you haven't checked all the answers yet. Please review them and try again!"
+    }
+  },
+  "courseAdminStatistics": {
+    "lessonPreview": {
+      "manualGradingTitle": "Manual grading",
+      "manualGradingDescription": "Short answer and free text responses start as ungraded. Mark the correct answers below to update the learner's score.",
+      "adjustedScore": "Adjusted score: {{score}}% ({{correct}} of {{total}} questions)",
+      "originalScore": "Original score: {{score}}% ({{correct}} of {{total}} questions)",
+      "markCorrect": "Mark correct",
+      "markIncorrect": "Mark incorrect",
+      "studentResponse": "Student response",
+      "noResponse": "No response provided",
+      "shortAnswerLabel": "Short answer",
+      "freeTextLabel": "Free text"
     }
   },
   "studentCourseView": {
