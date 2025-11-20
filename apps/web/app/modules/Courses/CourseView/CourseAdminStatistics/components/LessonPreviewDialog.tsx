@@ -40,25 +40,31 @@ export default function LessonPreviewDialog({
 
   const allQuestions = lesson?.quizDetails?.questions ?? [];
 
+  const shortAnswerQuestions = useMemo(
+    () =>
+      allQuestions.filter(
+        (question) =>
+          question.type === "brief_response" || question.type === "detailed_response",
+      ),
+    [allQuestions],
+  );
+
   const initialEvaluations = useMemo(() => {
     if (!allQuestions.length) return {} as Record<string, boolean>;
 
     return allQuestions.reduce<Record<string, boolean>>((acc, question) => {
-      const isTextQuestion =
-        question.type === "brief_response" || question.type === "detailed_response";
-
       if (question.passQuestion !== undefined && question.passQuestion !== null) {
         acc[question.id] = question.passQuestion;
         return acc;
       }
 
-      if (isTextQuestion) {
+      if (shortAnswerQuestions.some((q) => q.id === question.id)) {
         acc[question.id] = false;
       }
 
       return acc;
     }, {});
-  }, [allQuestions]);
+  }, [allQuestions, shortAnswerQuestions]);
 
   const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
 
