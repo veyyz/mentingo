@@ -33,7 +33,6 @@ import type {
 } from "../lesson.schema";
 import type { SupportedLanguages } from "src/ai/utils/ai.type";
 import type { UUIDType } from "src/common";
-import { QUESTION_TYPE } from "src/questions/schema/question.types";
 import { questions, quizAttempts, studentQuestionAnswers } from "src/storage/schema";
 
 @Injectable()
@@ -283,17 +282,14 @@ export class LessonService {
     }
 
     const lessonQuestions = await this.questionRepository.getQuizQuestionsToEvaluation(lessonId);
-    const manuallyGradableTypes = [QUESTION_TYPE.BRIEF_RESPONSE, QUESTION_TYPE.DETAILED_RESPONSE] as const;
-    const evaluableQuestionIds = lessonQuestions
-      .filter((question) => manuallyGradableTypes.includes(question.type as typeof manuallyGradableTypes[number]))
-      .map((question) => question.id);
+    const evaluableQuestionIds = lessonQuestions.map((question) => question.id);
 
     const invalidQuestionIds = evaluations
       .map((evaluation) => evaluation.questionId)
       .filter((questionId) => !evaluableQuestionIds.includes(questionId));
 
     if (invalidQuestionIds.length > 0) {
-      throw new ConflictException("Only short answer and free text questions can be graded manually");
+      throw new ConflictException("Only questions that belong to this lesson can be graded manually");
     }
 
     const quizSettings = await this.lessonRepository.getLessonSettings(lessonId);

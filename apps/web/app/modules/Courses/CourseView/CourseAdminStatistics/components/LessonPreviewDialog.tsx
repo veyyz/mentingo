@@ -38,27 +38,29 @@ export default function LessonPreviewDialog({
 
   const manualGradeLessonQuiz = useManualGradeLessonQuiz(lessonId, userId, course.id, language);
 
-  const shortAnswerQuestions = useMemo(() => {
-    const questions = lesson?.quizDetails?.questions ?? [];
-
-    return questions.filter(
-      (question) => question.type === "brief_response" || question.type === "detailed_response",
-    );
-  }, [lesson?.quizDetails?.questions]);
+  const allQuestions = useMemo(() => lesson?.quizDetails?.questions ?? [], [lesson]);
 
   const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!shortAnswerQuestions.length) return;
+    if (!allQuestions.length) return;
 
     const initialEvaluation: Record<string, boolean> = {};
 
-    shortAnswerQuestions.forEach((question) => {
-      initialEvaluation[question.id] = question.passQuestion ?? false;
+    allQuestions.forEach((question) => {
+      const isTextQuestion =
+        question.type === "brief_response" || question.type === "detailed_response";
+
+      if (question.passQuestion !== undefined && question.passQuestion !== null) {
+        initialEvaluation[question.id] = question.passQuestion;
+        return;
+      }
+
+      initialEvaluation[question.id] = isTextQuestion ? false : false;
     });
 
     setManualEvaluations(initialEvaluation);
-  }, [shortAnswerQuestions, lessonId]);
+  }, [allQuestions, lessonId]);
 
   useEffect(() => {
     if (!isLoadingUser && !isLoadingLesson && (!user || !lesson || !course)) {
@@ -82,9 +84,9 @@ export default function LessonPreviewDialog({
     setManualEvaluations((prev) => {
       const nextEvaluations = { ...prev, [questionId]: isCorrect };
 
-      const evaluations = shortAnswerQuestions.map((question) => ({
+      const evaluations = allQuestions.map((question) => ({
         questionId: question.id,
-        isCorrect: nextEvaluations[question.id] ?? false,
+        isCorrect: nextEvaluations[question.id] ?? question.passQuestion ?? false,
       }));
 
       manualGradeLessonQuiz.mutate(
@@ -95,7 +97,7 @@ export default function LessonPreviewDialog({
     });
   };
 
-  const manualGrading = shortAnswerQuestions.length
+  const manualGrading = allQuestions.length
     ? {
         evaluations: manualEvaluations,
         onChange: handleEvaluationChange,

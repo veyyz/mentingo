@@ -7,6 +7,7 @@ import { Button } from "~/components/ui/button";
 import { useUserRole } from "~/hooks/useUserRole";
 import { cn } from "~/lib/utils";
 import { QuestionCard } from "~/modules/Courses/Lesson/Question/QuestionCard";
+import { ManualGradingActions } from "~/modules/Courses/Lesson/Question/ManualGradingActions";
 
 import type { ManualGradingControls, QuizQuestion } from "~/modules/Courses/Lesson/Question/types";
 import type { QuizForm } from "~/modules/Courses/Lesson/types";
@@ -41,31 +42,7 @@ export const BriefResponse = ({ question, isCompleted = false, manualGrading }: 
           "pointer-events-none": isCompleted,
         })}
       />
-      {showManualGrading && (
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="body-sm text-neutral-700">
-            {t("courseAdminStatistics.lessonPreview.manualGradingTitle")}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant={manualEvaluation ? "default" : "outline"}
-              disabled={manualGrading?.isPending}
-              onClick={() => manualGrading?.onChange(question.id, true)}
-            >
-              {t("courseAdminStatistics.lessonPreview.markCorrect")}
-            </Button>
-            <Button
-              type="button"
-              variant={manualEvaluation === false ? "destructive" : "outline"}
-              disabled={manualGrading?.isPending}
-              onClick={() => manualGrading?.onChange(question.id, false)}
-            >
-              {t("courseAdminStatistics.lessonPreview.markIncorrect")}
-            </Button>
-          </div>
-        </div>
-      )}
+      <ManualGradingActions questionId={question.id} manualGrading={manualGrading} />
     </QuestionCard>
   );
 };

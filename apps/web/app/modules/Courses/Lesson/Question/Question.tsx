@@ -51,25 +51,67 @@ export const Question = ({ question, isCompleted, lessonId, manualGrading }: Que
       );
 
     case isTextFillInTheBlanks:
-      return <FillInTheBlanks question={question} isCompleted={isCompleted} />;
+      return (
+        <FillInTheBlanks
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isDraggableFillInTheBlanks:
-      return <FillInTheBlanksDnd question={question} isCompleted={isCompleted} />;
+      return (
+        <FillInTheBlanksDnd
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isSingleQuestion:
-      return <SingleChoice question={question} isCompleted={isCompleted} />;
+      return (
+        <SingleChoice
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isMultiQuestion:
-      return <MultipleChoice question={question} isCompleted={isCompleted} />;
+      return (
+        <MultipleChoice
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isPhotoQuestionSingleChoice:
-      return <PhotoQuestionSingleChoice question={question} isCompleted={isCompleted} />;
+      return (
+        <PhotoQuestionSingleChoice
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isPhotoQuestionMultipleChoice:
-      return <PhotoQuestionMultipleChoice question={question} isCompleted={isCompleted} />;
+      return (
+        <PhotoQuestionMultipleChoice
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     case isTrueOrFalse:
-      return <TrueOrFalse question={question} isCompleted={isCompleted} />;
+      return (
+        <TrueOrFalse
+          question={question}
+          isCompleted={isCompleted}
+          manualGrading={manualGrading}
+        />
+      );
 
     default:
       return null;
