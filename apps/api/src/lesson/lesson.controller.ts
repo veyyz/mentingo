@@ -39,6 +39,7 @@ import {
   updateEmbedLessonSchema,
   CreateEmbedLessonBody,
   UpdateEmbedLessonBody,
+  manualQuizGradeSchema,
   enrolledLessonSchema,
 } from "./lesson.schema";
 import { AdminLessonService } from "./services/adminLesson.service";
@@ -281,6 +282,37 @@ export class LessonController {
     const evaluationResult = await this.lessonService.evaluationQuiz(answers, currentUserId);
     return new BaseResponse({
       message: "Evaluation quiz successfully",
+      data: evaluationResult,
+    });
+  }
+
+  @Patch("manual-quiz-grade")
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.CONTENT_CREATOR)
+  @Validate({
+    request: [{ type: "body", schema: manualQuizGradeSchema, required: true }],
+    response: baseResponse(
+      Type.Object({
+        message: Type.String(),
+        data: Type.Object({
+          correctAnswerCount: Type.Number(),
+          wrongAnswerCount: Type.Number(),
+          questionCount: Type.Number(),
+          score: Type.Number(),
+        }),
+      }),
+    ),
+  })
+  async manualQuizGrade(
+    @Body() manualGradeBody: { lessonId: UUIDType; studentId: UUIDType; evaluations: { questionId: UUIDType; isCorrect: boolean }[] },
+  ) {
+    const evaluationResult = await this.lessonService.manualQuizGrade(
+      manualGradeBody.lessonId,
+      manualGradeBody.studentId,
+      manualGradeBody.evaluations,
+    );
+
+    return new BaseResponse({
+      message: "Manual quiz grade updated",
       data: evaluationResult,
     });
   }

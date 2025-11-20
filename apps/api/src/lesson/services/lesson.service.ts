@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { EventBus } from "@nestjs/cqrs";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { isNumber } from "lodash";
 
 import { AiService } from "src/ai/services/ai.service";
@@ -32,6 +33,8 @@ import type {
 } from "../lesson.schema";
 import type { SupportedLanguages } from "src/ai/utils/ai.type";
 import type { UUIDType } from "src/common";
+import { QUESTION_TYPE } from "src/questions/schema/question.types";
+import { questions, quizAttempts, studentQuestionAnswers } from "src/storage/schema";
 
 @Injectable()
 export class LessonService {
@@ -262,6 +265,127 @@ export class LessonService {
             error?.response?.error,
         );
       }
+    });
+  }
+
+  async manualQuizGrade(
+    lessonId: UUIDType,
+    studentId: UUIDType,
+    evaluations: { questionId: UUIDType; isCorrect: boolean }[],
+  ) {
+    const [accessCourseLessonWithDetails] = await this.lessonRepository.checkLessonAssignment(
+      lessonId,
+      studentId,
+    );
+
+    if (!accessCourseLessonWithDetails.lessonIsCompleted) {
+      throw new ConflictException("Student has not completed this lesson");
+    }
+
+    const lessonQuestions = await this.questionRepository.getQuizQuestionsToEvaluation(lessonId);
+    const evaluableQuestionIds = lessonQuestions
+      .filter((question) =>
+        [QUESTION_TYPE.BRIEF_RESPONSE, QUESTION_TYPE.DETAILED_RESPONSE].includes(question.type),
+      )
+      .map((question) => question.id);
+
+    const invalidQuestionIds = evaluations
+      .map((evaluation) => evaluation.questionId)
+      .filter((questionId) => !evaluableQuestionIds.includes(questionId));
+
+    if (invalidQuestionIds.length > 0) {
+      throw new ConflictException("Only short answer and free text questions can be graded manually");
+    }
+
+    const quizSettings = await this.lessonRepository.getLessonSettings(lessonId);
+    const completedQuestionCount = lessonQuestions.length;
+
+    const evaluationMap = evaluations.reduce<Record<UUIDType, boolean>>((map, evaluation) => {
+      map[evaluation.questionId] = evaluation.isCorrect;
+      return map;
+    }, {} as Record<UUIDType, boolean>);
+
+    const questionIdsToUpdate = Object.keys(evaluationMap);
+
+    return await this.db.transaction(async (trx) => {
+      if (questionIdsToUpdate.length > 0) {
+        for (const questionId of questionIdsToUpdate) {
+          await trx
+            .update(studentQuestionAnswers)
+            .set({ isCorrect: evaluationMap[questionId as UUIDType] })
+            .where(
+              and(
+                eq(studentQuestionAnswers.studentId, studentId),
+                eq(studentQuestionAnswers.questionId, questionId as UUIDType),
+              ),
+            );
+        }
+      }
+
+      const [currentStats] = await trx
+        .select({
+          correctAnswerCount: sql<number>`COALESCE(SUM(CASE WHEN ${studentQuestionAnswers.isCorrect} THEN 1 ELSE 0 END), 0)::INTEGER`,
+          questionCount: sql<number>`COUNT(*)::INTEGER`,
+        })
+        .from(studentQuestionAnswers)
+        .innerJoin(questions, eq(questions.id, studentQuestionAnswers.questionId))
+        .where(and(eq(studentQuestionAnswers.studentId, studentId), eq(questions.lessonId, lessonId)));
+
+      const correctAnswerCount = currentStats?.correctAnswerCount ?? 0;
+      const questionCount = currentStats?.questionCount ?? completedQuestionCount;
+      const wrongAnswerCount = Math.max(questionCount - correctAnswerCount, 0);
+      const score = questionCount ? Math.floor((correctAnswerCount / questionCount) * 100) : 0;
+
+      const requiredCorrect = Math.ceil(((quizSettings?.thresholdScore ?? 0) * questionCount) / 100);
+      const isQuizPassed = quizSettings?.thresholdScore
+        ? requiredCorrect <= correctAnswerCount
+        : true;
+
+      await this.studentLessonProgressService.updateQuizProgress(
+        accessCourseLessonWithDetails.chapterId,
+        lessonId,
+        studentId,
+        questionCount,
+        score,
+        accessCourseLessonWithDetails.attempts ?? 1,
+        isQuizPassed,
+        true,
+        trx,
+      );
+
+      const [latestAttempt] = await trx
+        .select({ id: quizAttempts.id })
+        .from(quizAttempts)
+        .where(and(eq(quizAttempts.lessonId, lessonId), eq(quizAttempts.userId, studentId)))
+        .orderBy(desc(quizAttempts.createdAt))
+        .limit(1);
+
+      if (latestAttempt) {
+        await trx
+          .update(quizAttempts)
+          .set({
+            correctAnswers: correctAnswerCount,
+            wrongAnswers: wrongAnswerCount,
+            score,
+          })
+          .where(eq(quizAttempts.id, latestAttempt.id));
+      } else {
+        await trx.insert(quizAttempts).values({
+          userId: studentId,
+          courseId: accessCourseLessonWithDetails.courseId,
+          lessonId,
+          correctAnswers: correctAnswerCount,
+          wrongAnswers: wrongAnswerCount,
+          score,
+        });
+      }
+
+      return {
+        correctAnswerCount,
+        wrongAnswerCount,
+        questionCount,
+        score,
+      };
     });
   }
 
