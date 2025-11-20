@@ -38,13 +38,13 @@ export default function LessonPreviewDialog({
 
   const manualGradeLessonQuiz = useManualGradeLessonQuiz(lessonId, userId, course.id, language);
 
-  const shortAnswerQuestions = useMemo(
-    () =>
-      lesson?.quizDetails?.questions.filter(
-        (question) => question.type === "brief_response" || question.type === "detailed_response",
-      ) ?? [],
-    [lesson?.quizDetails?.questions],
-  );
+  const shortAnswerQuestions = useMemo(() => {
+    const questions = lesson?.quizDetails?.questions ?? [];
+
+    return questions.filter(
+      (question) => question.type === "brief_response" || question.type === "detailed_response",
+    );
+  }, [lesson?.quizDetails?.questions]);
 
   const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
   const [manualGradeStats, setManualGradeStats] =
@@ -53,6 +53,8 @@ export default function LessonPreviewDialog({
     );
 
   useEffect(() => {
+    if (!shortAnswerQuestions.length) return;
+
     const initialEvaluation: Record<string, boolean> = {};
 
     shortAnswerQuestions.forEach((question) => {
