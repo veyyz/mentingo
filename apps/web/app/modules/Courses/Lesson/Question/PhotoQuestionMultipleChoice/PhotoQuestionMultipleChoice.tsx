@@ -1,18 +1,21 @@
 import { useUserRole } from "~/hooks/useUserRole";
 import { MultipleChoiceOptionList } from "~/modules/Courses/Lesson/Question/MultipleChoice/MultipleChoiceOptionList";
 
+import { ManualGradingActions } from "../ManualGradingActions";
 import { QuestionCard } from "../QuestionCard";
 
-import type { QuizQuestion } from "../types";
+import type { ManualGradingControls, QuizQuestion } from "../types";
 
 type PhotoQuestionMultipleChoiceProps = {
   question: QuizQuestion;
   isCompleted?: boolean;
+  manualGrading?: ManualGradingControls;
 };
 
 export const PhotoQuestionMultipleChoice = ({
   question,
   isCompleted = false,
+  manualGrading,
 }: PhotoQuestionMultipleChoiceProps) => {
   const { isAdmin } = useUserRole();
 
@@ -34,6 +37,7 @@ export const PhotoQuestionMultipleChoice = ({
         isAdmin={isAdmin}
         withPicture
       />
+      <ManualGradingActions questionId={question.id} manualGrading={manualGrading} />
     </QuestionCard>
   );
 };
