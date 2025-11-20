@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLesson } from "~/api/queries";
@@ -40,16 +40,9 @@ export default function LessonPreviewDialog({
 
   const allQuestions = lesson?.quizDetails?.questions ?? [];
 
-  const shortAnswerQuestions = useMemo(
-    () =>
-      allQuestions.filter(
-        (question) =>
-          question.type === "brief_response" || question.type === "detailed_response",
-      ),
-    [allQuestions],
-  );
+  const isShortAnswer = (type: string) => type === "brief_response" || type === "detailed_response";
 
-  const initialEvaluations = useMemo(() => {
+  const computeInitialEvaluations = () => {
     if (!allQuestions.length) return {} as Record<string, boolean>;
 
     return allQuestions.reduce<Record<string, boolean>>((acc, question) => {
@@ -58,19 +51,19 @@ export default function LessonPreviewDialog({
         return acc;
       }
 
-      if (shortAnswerQuestions.some((q) => q.id === question.id)) {
+      if (isShortAnswer(question.type)) {
         acc[question.id] = false;
       }
 
       return acc;
     }, {});
-  }, [allQuestions, shortAnswerQuestions]);
+  };
 
   const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    setManualEvaluations(initialEvaluations);
-  }, [initialEvaluations]);
+    setManualEvaluations(computeInitialEvaluations());
+  }, [allQuestions]);
 
   useEffect(() => {
     if (!isLoadingUser && !isLoadingLesson && (!user || !lesson || !course)) {
@@ -90,33 +83,20 @@ export default function LessonPreviewDialog({
     ((lesson.thresholdScore ?? 0) * (lesson.quizDetails?.questionCount ?? 0)) / 100,
   );
 
-  const evaluatedQuestions = useMemo(
-    () =>
-      allQuestions.map((question) => {
-        const manualEvaluation = manualEvaluations[question.id];
-        const isShortAnswer = shortAnswerQuestions.some((q) => q.id === question.id);
+  const evaluatedQuestions = allQuestions.map((question) => {
+    const manualEvaluation = manualEvaluations[question.id];
 
-        return {
-          questionId: question.id,
-          isCorrect:
-            manualEvaluation ??
-            question.passQuestion ??
-            (isShortAnswer ? false : false),
-        };
-      }),
-    [allQuestions, manualEvaluations, shortAnswerQuestions],
-  );
+    return {
+      questionId: question.id,
+      isCorrect: manualEvaluation ?? question.passQuestion ?? (isShortAnswer(question.type) ? false : false),
+    };
+  });
 
-  const adjustedCorrect = useMemo(
-    () => evaluatedQuestions.filter((question) => question.isCorrect).length,
-    [evaluatedQuestions],
-  );
+  const adjustedCorrect = evaluatedQuestions.filter((question) => question.isCorrect).length;
 
   const adjustedTotal = allQuestions.length;
 
-  const adjustedScore = adjustedTotal
-    ? Math.round((adjustedCorrect / adjustedTotal) * 100)
-    : 0;
+  const adjustedScore = adjustedTotal ? Math.round((adjustedCorrect / adjustedTotal) * 100) : 0;
 
   const handleEvaluationChange = (questionId: string, isCorrect: boolean) => {
     setManualEvaluations((prev) => {
@@ -125,8 +105,9 @@ export default function LessonPreviewDialog({
       const evaluations = allQuestions.map((question) => ({
         questionId: question.id,
         isCorrect:
-          nextEvaluations[question.id] ?? question.passQuestion ??
-          (shortAnswerQuestions.some((q) => q.id === question.id) ? false : false),
+          nextEvaluations[question.id] ??
+          question.passQuestion ??
+          (isShortAnswer(question.type) ? false : false),
       }));
 
       manualGradeLessonQuiz.mutate({ lessonId, studentId: userId, evaluations });
