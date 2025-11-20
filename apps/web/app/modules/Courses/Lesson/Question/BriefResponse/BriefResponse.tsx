@@ -4,16 +4,18 @@ import { Textarea } from "~/components/ui/textarea";
 import { useUserRole } from "~/hooks/useUserRole";
 import { cn } from "~/lib/utils";
 import { QuestionCard } from "~/modules/Courses/Lesson/Question/QuestionCard";
+import { ManualGradingActions } from "~/modules/Courses/Lesson/Question/ManualGradingActions";
 
-import type { QuizQuestion } from "~/modules/Courses/Lesson/Question/types";
+import type { ManualGradingControls, QuizQuestion } from "~/modules/Courses/Lesson/Question/types";
 import type { QuizForm } from "~/modules/Courses/Lesson/types";
 
 export type BriefResponseProps = {
   question: QuizQuestion;
   isCompleted?: boolean;
+  manualGrading?: ManualGradingControls;
 };
 
-export const BriefResponse = ({ question, isCompleted = false }: BriefResponseProps) => {
+export const BriefResponse = ({ question, isCompleted = false, manualGrading }: BriefResponseProps) => {
   const { isAdmin } = useUserRole();
   const { register } = useFormContext<QuizForm>();
 
@@ -33,6 +35,7 @@ export const BriefResponse = ({ question, isCompleted = false }: BriefResponsePr
           "pointer-events-none": isCompleted,
         })}
       />
+      <ManualGradingActions questionId={question.id} manualGrading={manualGrading} />
     </QuestionCard>
   );
 };
