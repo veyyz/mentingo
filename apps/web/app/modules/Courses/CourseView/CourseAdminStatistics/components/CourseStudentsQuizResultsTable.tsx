@@ -1,7 +1,7 @@
 import { useParams } from "@remix-run/react";
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCourseStudentsQuizResults } from "~/api/queries/admin/useCourseStudentsQuizResults";
@@ -53,16 +53,33 @@ export function CourseStudentsQuizResultsTable({
 
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  useEffect(() => {
+    if (sorting.length || !searchParams.sort) return;
+
+    const [sortField, sortDirection] = searchParams.sort.startsWith("-")
+      ? [searchParams.sort.slice(1), true]
+      : [searchParams.sort, false];
+
+    setSorting([{ id: sortField, desc: sortDirection }]);
+  }, [searchParams.sort, sorting.length]);
+
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [previewDialogData, setPreviewDialogData] = useState<{
     lessonId: string;
     userId: string;
   } | null>(null);
 
+  const querySort = useMemo(() => {
+    if (sorting.length) {
+      return tanstackSortingToParam(sorting) as CourseStudentsQuizResultsQueryParams["sort"];
+    }
+
+    return searchParams.sort;
+  }, [searchParams.sort, sorting]);
+
   const query = useMemo(() => {
-    const sort = tanstackSortingToParam(sorting) as CourseStudentsQuizResultsQueryParams["sort"];
-    return { ...searchParams, sort };
-  }, [searchParams, sorting]);
+    return { ...searchParams, sort: querySort };
+  }, [querySort, searchParams]);
 
   const {
     data: courseStudentsQuizResults,
