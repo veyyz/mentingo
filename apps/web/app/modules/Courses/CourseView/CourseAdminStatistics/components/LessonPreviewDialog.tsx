@@ -22,9 +22,12 @@ type LessonQuizQuestion = NonNullable<
   NonNullable<GetCourseResponse["data"]["chapters"]>[number]["lessons"][number]["quizDetails"]
 >["questions"][number];
 
-const buildDefaultEvaluations = (questions: LessonQuizQuestion[] | undefined) => {
+const buildDefaultEvaluations = (
+  questions: LessonQuizQuestion[] | undefined,
+  shortAnswerIds: Set<string>,
+) => {
   return questions?.reduce<Record<string, boolean>>((acc, question) => {
-    if (isShortAnswer(question.type)) {
+    if (shortAnswerIds.has(question.id)) {
       acc[question.id] = false;
       return acc;
     }
@@ -63,7 +66,20 @@ export default function LessonPreviewDialog({
 
   const allQuestions = lesson?.quizDetails?.questions ?? [];
 
-  const defaultManualEvaluations = useMemo(() => buildDefaultEvaluations(allQuestions), [allQuestions]);
+  const shortAnswerQuestions = useMemo(
+    () => allQuestions.filter((question) => isShortAnswer(question.type)),
+    [allQuestions],
+  );
+
+  const shortAnswerIds = useMemo(
+    () => new Set(shortAnswerQuestions.map((question) => question.id)),
+    [shortAnswerQuestions],
+  );
+
+  const defaultManualEvaluations = useMemo(
+    () => buildDefaultEvaluations(allQuestions, shortAnswerIds),
+    [allQuestions, shortAnswerIds],
+  );
 
   const [manualEvaluations, setManualEvaluations] = useState<Record<string, boolean>>({});
 
