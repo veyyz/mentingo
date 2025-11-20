@@ -11,6 +11,7 @@ export { useMarkLessonAsCompleted } from "./useMarkLessonAsCompleted";
 export { useRegisterUser } from "./useRegisterUser";
 export { useStripePaymentIntent } from "./useStripePaymentIntent";
 export { useSubmitQuiz } from "./useSubmitQuiz";
+export { useManualGradeLessonQuiz } from "./useManualGradeLessonQuiz";
 export { useUnenrollCourse } from "./useUnenrollCourse";
 export { useUpdateColorSchema } from "./useUpdateColorSchema";
 export { useUpdateUser } from "./useUpdateUser";

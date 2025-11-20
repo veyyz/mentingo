@@ -33,6 +33,7 @@ import {
 } from "./utils";
 
 import type { QuizForm } from "./types";
+import type { ManualGradingControls } from "./Question/types";
 import type { GetLessonByIdResponse } from "~/api/generated-api";
 
 type QuizProps = {
@@ -40,9 +41,16 @@ type QuizProps = {
   userId: string;
   isPreviewMode: boolean;
   previewLessonId: string;
+  manualGrading?: ManualGradingControls;
 };
 
-export const Quiz = ({ lesson, userId, isPreviewMode = false, previewLessonId }: QuizProps) => {
+export const Quiz = ({
+  lesson,
+  userId,
+  isPreviewMode = false,
+  previewLessonId,
+  manualGrading,
+}: QuizProps) => {
   const { lessonId = "" } = useParams();
   const { t } = useTranslation();
   const { isAdminLike } = useUserRole();
@@ -128,6 +136,7 @@ export const Quiz = ({ lesson, userId, isPreviewMode = false, previewLessonId }:
           questions={questions}
           isQuizCompleted={isUserSubmittedAnswer}
           lessonId={previewLessonId || lessonId}
+          manualGrading={manualGrading}
         />
         {!isPreviewMode && (
           <div className="flex gap-x-2 self-end">
